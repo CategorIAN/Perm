@@ -1,4 +1,8 @@
-from perm import Code, Grid, PermCoset, Perm, SymGroup
+from .Code import Code
+from .Grid import Grid
+from .Perm import Perm
+from .SymGroup import SymGroup
+from .PermCoset import PermCoset
 
 class Graph(Code):
     def __init__(self, vertices, edges):
@@ -8,7 +12,7 @@ class Graph(Code):
         symedges = set()
         for e in edges:
             symedges.update({e, (e[1], e[0])})
-        super(symedges, grid)
+        super().__init__(symedges, grid)
 
     def id(self):
         idact = {}
@@ -16,7 +20,7 @@ class Graph(Code):
             idact[i] = i
         return Perm(idact)
 
-    def trans(self, other):
+    def flip(self, other):
         transact = {}
         for i in self.vertices:
             transact[(i, None)] = (None, i)
@@ -29,7 +33,7 @@ class Graph(Code):
             return PermCoset(set(), self.id.sum(other.id))
         else:
             L = SymGroup(len(self.vertices)).sumdiag.griddiag
-            z = self.trans(other).griddiag
+            z = self.flip(other).griddiag
             coset = PermCoset(L, z)
             pi = set()
             for p in self.pi:

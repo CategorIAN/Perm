@@ -1,4 +1,4 @@
-from perm import Perm
+from .Perm import Perm
 
 class Cycle(Perm):
 

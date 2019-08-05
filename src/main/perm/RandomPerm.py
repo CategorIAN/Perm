@@ -1,5 +1,5 @@
 import random
-import perm
+from .Cycle import Cycle
 
 class RandomPerm:
 
@@ -11,11 +11,11 @@ class RandomPerm:
             c.append(i)
             x.remove(i)
             i = random.randint(0, degree)
-        return perm.Cycle(c)
+        return Cycle(c)
 
     def perm(self, degree):
         f = random.randint(0, degree)
-        g = perm.Cycle([degree - 1])
+        g = Cycle([degree - 1])
         for i in range(f):
             g = g * self.cycle(degree)
 

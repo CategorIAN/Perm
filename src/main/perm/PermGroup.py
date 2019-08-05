@@ -1,4 +1,5 @@
-from perm import BSGS, CAT
+from .BSGS import BSGS
+from .CAT import CAT
 
 class PermGroup(CAT):
     def __init__(self, gens):
@@ -115,7 +116,7 @@ class PermGroup(CAT):
                     newgens[j] = newgens[j].clear()
                 next = i - 1
                 for g in tt:
-                    (h, j) = strip(base, reprs, i + 1, g)
+                    (h, j) = self.strip(base, reprs, i + 1, g)
                     if not h.isID:
                         next = max(next, j)
                         for k in range(i + 1, j + 1):
@@ -126,21 +127,8 @@ class PermGroup(CAT):
                             base.append(y)
                             groups.append(PermGroup({h, h.inv}))
                             newgens.append({h, h.inv})
-            return getlevels(groups, newgens, reprs, next)
+            return getlevels(base, groups, newgens, reprs, next)
 
-
-        def strip(base, reprs, start, g):
-            def go(h, l):
-                repr = reprs.get(start + l)
-                if repr is None:
-                    return (h, start + l)
-                else:
-                    u = repr.get(h.act[base[start + l]])
-                    if u is None:
-                        return (h, start + l)
-                    else:
-                        return go(h * u.inv, l + 1)
-            return go(g, 0)
 
         groups = partialbsgs(base, perms)
         newgens = []
@@ -149,7 +137,7 @@ class PermGroup(CAT):
             newgens[i] = set()
             reprs[i] = {}
 
-        return getlevels(groups, newgens, reprs, len(groups) - 1)
+        return getlevels(base, groups, newgens, reprs, len(groups) - 1)
 
     def atkinson(self, a, b):
         if a < b: bs = {b:a}; explore = [b]
@@ -224,7 +212,18 @@ class PermGroup(CAT):
             gens0.add(g.gridFromseqinv)
         return PermGroup(gens0)
 
-    #Need Random
+    def strip(self, base, reprs, start, g):
+        def go(h, l):
+            repr = reprs.get(start + l)
+            if repr is None:
+                return (h, start + l)
+            else:
+                u = repr.get(h.act[base[start + l]])
+                if u is None:
+                    return (h, start + l)
+                else:
+                    return go(h * u.inv, l + 1)
+        return go(g, 0)
 
 
 

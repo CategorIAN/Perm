@@ -1,4 +1,4 @@
-from perm import PermGroup
+from .PermGroup import PermGroup
 
 class BSGS:
 

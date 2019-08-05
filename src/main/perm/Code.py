@@ -1,4 +1,7 @@
-from perm import PermCoset, PermGroup, Grid
+from .PermCoset import PermCoset
+from .PermGroup import PermGroup
+from .Grid import Grid
+
 
 class Code:
     def __init__(self, pi, codegrid):
@@ -8,6 +11,7 @@ class Code:
     def trans(self, coset, grid):
         def union(cc):
             L = None
+            z = None
             for c in cc:
                 if not c.isEmpty:
                     if L is None:

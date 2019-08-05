@@ -1,4 +1,5 @@
-from perm import PermGroup, Perm
+from .PermGroup import PermGroup
+from .Perm import Perm
 
 class SymGroup(PermGroup):
     def __init__(self, n):
@@ -12,7 +13,7 @@ class SymGroup(PermGroup):
             for i in range(2, n):
                 g1act[i] = i
             gens.add(Perm(g1act))
-        super(gens)
+        super().__init__(gens)
 
 
 

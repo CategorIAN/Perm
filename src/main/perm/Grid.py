@@ -19,7 +19,5 @@ class Grid:
             m2 = len(self.psi) // 2
             return (Grid(self.phi, self.psi[:m2]), Grid(self.phi, self.psi[m2:]))
 
-if __name__ == "main":
-    print(Grid([1,2,3], [3,4,5]))
 
 

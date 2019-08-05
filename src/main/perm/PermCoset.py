@@ -1,4 +1,6 @@
-from perm import CAT, Code, Grid
+from .CAT import CAT
+from .Code import Code
+from .Grid import Grid
 
 class PermCoset(CAT):
     def __init__(self, L, z):

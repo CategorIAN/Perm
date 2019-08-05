@@ -1,5 +1,8 @@
 from math import factorial
-from perm import CAT
+from .CAT import CAT
+from .Grid import Grid
+
+
 class Perm(CAT):
     def __init__(self, act):
         self.act = act
