@@ -10,14 +10,22 @@ class Perm(CAT):
 
     def __str__(self):
         if self.degree < 100:
-            print("Perm{}".format(self.act))
+            return "Perm{}".format(self.act)
         else:
-            print("Perm of Degree {}".format(self.degree))
+            return "Perm of Degree {}".format(self.degree)
 
     def __call__(self, a):
         return self.act[a]
 
+    def extend(self, deg):
+        for i in range(self.degree, deg):
+            self.act[i] = i
+        self.degree = deg
+
     def __mul__(self, other):
+        d = max(self.degree, other.degree)
+        self.extend(d)
+        other.extend(d)
         prodact = {}
         for i in self.act:
             prodact[i] = other(self(i))

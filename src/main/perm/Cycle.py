@@ -7,7 +7,7 @@ class Cycle(Perm):
         n = len(aa)
         degree = 0
         for i in range(n):
-            degree = max(aa[i], degree)
+            degree = max(aa[i] + 1, degree)
             act[aa[i]] = aa[(i + 1) % n]
         for i in range(degree):
             if act.get(i) is None:
@@ -17,15 +17,6 @@ class Cycle(Perm):
     def __call__(self, a):
        return self.act[a]
 
-    def __mul__(self, other):
-        prodact = {}
-        mindegree = min(self.degree, other.degree)
-        maxdegree = max(self.degree, other.degree)
-        for i in range(mindegree):
-            prodact[i] = other(self(i))
-        for i in range(mindegree, maxdegree):
-            prodact[i] = i
-        return Perm(prodact)
 
 
 
