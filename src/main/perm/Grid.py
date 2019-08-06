@@ -3,11 +3,14 @@ class Grid:
         self.phi = phi
         self.psi = psi
 
+    def __repr__(self):
+        return "Grid:({}, {})".format(self.phi, self.psi)
+
     def points(self, Pi):
         S = set()
         for p in Pi:
-            if self.phi.contains(p[0]) and \
-            self.psi.contains(p[1]):
+            if p[0] in self.phi and \
+            p[1] in self.psi:
                 S.add(p)
         return S
 

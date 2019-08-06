@@ -47,7 +47,7 @@ class Perm(CAT):
 
     def inv(self):
         invact = {}
-        for k, v in self.act.items:
+        for k, v in self.act.items():
             invact[v] = k
         return Perm(invact)
 
@@ -100,12 +100,13 @@ class Perm(CAT):
         return N
 
     def ksubset(self, n, k, i): #This returns the subset of a given index.
-        p = 0
         s = 0
         S = set()
+        p = 0
         while len(S) < k:
             p += self.nCk(n - s - 1, k - len(S) - 1)
             if i < p:
+                p -= self.nCk(n - s - 1, k - len(S) - 1)
                 S.add(s)
             s += 1
         return S
@@ -124,15 +125,15 @@ class Perm(CAT):
         n = self.degree
         seqact = {}
         for i in range(self.nCks(n)):
-            x = list(self.subset(n, i))
+            x = tuple(self.subset(n, i))
             y = []
             for j in x:
                 y.append(self(j))
-            seqact[x] = y
+            seqact[x] = tuple(y)
         return Perm(seqact)
 
     def seqinv(self):
-        x = []
+        x = ()
         for i in self.act:
             if len(x) < len(i):
                 x = i
@@ -140,21 +141,21 @@ class Perm(CAT):
         seqinvact = {}
         for i in range(len(x)):
             seqinvact[x[i]] = y[i]
+        return Perm(seqinvact)
 
     def gridFromseq(self, other):
         gridact = {}
-        for i, j in self.act.items:
-            for k, l in other.act:
+        for i, j in self.act.items():
+            for k, l in other.act.items():
                 gridact[Grid(i, k)] = Grid(j, l)
         return Perm(gridact)
 
 
     def gridFromseqinv(self):
         seqact = {}
-        for i, j in self.act.items:
+        for i, j in self.act.items():
            seqact[i.phi] = j.phi
-
-    #Need random.
+        return Perm(seqact)
 
 
 
