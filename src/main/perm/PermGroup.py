@@ -1,4 +1,5 @@
 from .CAT import CAT
+from copy import copy
 
 class PermGroup(CAT):
     def __init__(self, gens):
@@ -9,134 +10,148 @@ class PermGroup(CAT):
                 d = g.degree
         self.degree = d
 
-    def __str__(self):
+    def __repr__(self):
         return "PermGroup:{}".format(self.gens)
 
     def identity(self):
-        return self.gens[0].id
+        return self.gens[0].id()
 
     def union(self, other):
-        PermGroup(self.gens.union(other.gens))
+        PermGroup(self.gens + other.gens)
 
     def __add__(self, other):
-        PermGroup(self.gens.add(other))
+        self.gens.append(other)
+        return self
 
-    def SS(self, a):
-        repr = {a:self.identity}
-        for s in repr:
+    def SchStr(self, a):
+        pts = [a]
+        trvs = [self.identity()]
+        for s in pts:
             for g in self.gens:
-                r = g.act[s]
-                if repr.get(r) is None:
-                    repr[r] = repr[s] * g
+                r = g(s)
+                if r not in pts:
+                    pts.append(r)
+                    trvs.append(trvs[pts.index(s)] * g)
+        return (pts, trvs)
 
     def orbit(self, a, x = None, gg = None):
-        if x == None: x = {a}
-        if gg == None: gg = self.gens
-
-        y = set()
-        for s in x:
-            for g in gg:
-                r = g.act[s]
-                if r not in x:
-                    y.add(r)
-
-        for s in y:
-            for g in self.gens:
-                r = g.act[s]
-                if r not in x or r not in y:
-                    y.add(r)
-
-        return x.union(y)
-
-    def orbitStab(self, a, x = None, gg = None):
-        M = set()
-        if x is None: x = {a:self.identity}
+        if x is None: x = [a]
         if gg is None: gg = self.gens
 
-        y = {}
+        y = []
         for s in x:
             for g in gg:
-                r = g.act[s]
-                if x.get(r) is None:
-                    y[r] = x[s] * g
-                else:
-                    M.add(x[s] * g * x[r].inv)
+                r = g(s)
+                if r not in x and r not in y:
+                    y.append(r)
 
         for s in y:
             for g in self.gens:
-                r = g.act[s]
-                if x.get(r) is None:
-                    if y.get(r) is None:
-                        y[r] = y[s] * g
-                    else:
-                        M.add(y[s] * g * y[r].inv)
+                r = g(s)
+                if r not in x and r not in y:
+                    y.append(r)
+
+        return x + y
+
+    def orbitstab(self, a, x = None, gx = None, gens = None):
+        M = []
+        if x is None: x = [a]; gx = [self.identity()]
+        if gens is None: gens = self.gens
+
+        y = []
+        gy = []
+        for s in x:
+            for g in gens:
+                r = g(s)
+                if r not in x and r not in y:
+                    y.append(r)
+                    gy.append(gx[x.index(s)] * g)
+                elif r in x:
+                    M.append(gx[x.index(s)] * g * gx[x.index(r)].inv())
                 else:
-                    M.add(y[s] * g * x[r].inv)
+                    M.append(gx[x.index(s)] * g * gy[y.index(r)].inv())
 
-        return (x.update(y), M)
+        for s in y:
+            for g in self.gens:
+                r = g(s)
+                if r not in x and r not in y:
+                    y.append(r)
+                    gy.append(gy[y.index(s)] * g)
+                elif r in x:
+                    M.append(gy[y.index(s)] * g * gx[x.index(r)].inv())
+                else:
+                    M.append(gy[y.index(s)] * g * gy[y.index(r)].inv())
 
-    def schsims(self, base, perms):
+        return (x + y, gx + gy, M)
+
+    def schsims(self, base = None, perms = None):
 
         def partialbsgs(b, p):
-            tt = self.gens.union(p)
-            notbase = tt[0].keys().difference( b )
+            if b is None: b = []
+            if p is None: p = []
+            tt = self.gens + p
             groups = []
-            max = 0
+            m = 0
             for i in range(len(b)):
-                groups[i] = PermGroup(set())
+                groups.append(PermGroup([]))
             for g in tt:
                 x = g.movedpt(b)
                 if x is None:
-                    y = g.movedpt(notbase)
+                    y = g.movedpt()
                     if y is not None:
                         b.append(y)
-                        groups.append(PermGroup(set()))
-                        notbase.remove(y)
-                        max = len(b)
-                        for i in range(max):
-                            groups[i] = groups[i] + g + g.inv
+                        groups.append(PermGroup([]))
+                        m = len(b)
+                        for i in range(m):
+                            groups[i] = groups[i] + g
+                            groups[i] = groups[i] + g.inv()
                 else:
                     dropout = b.index(x)
-                    max = max(max, dropout)
+                    m = max(m, dropout + 1)
                     for i in range(dropout + 1):
-                        groups[i] = groups[i] + g + g.inv
-            b = b[:max]
-            groups = groups[:max]
+                        groups[i] = groups[i] + g
+                        groups[i] = groups[i] + g.inv()
+            b = b[:m]
+            groups = groups[:m]
 
-            return groups
+            return (b, groups)
 
-        def getlevels(base, groups, newgens, reprs, i):
+        def getlevels(b, gg, newgens, xs, gxs, i):
             if i < 0:
-                return BSGS(base, groups, reprs)
+                return BSGS(b, gg, (xs, gxs))
             else:
-                (repr, tt) = groups[i].orbitStab(base[i], reprs[i], newgens[i])
-                reprs[i] = repr
-                for j in range(len(newgens)):
-                    newgens[j] = newgens[j].clear()
+                (x, gx, tt) = gg[i].orbitstab(b[i], xs[i], gxs[i], newgens[i])
+                xs[i] = x
+                gxs[i] = gx
+                newgens[i].clear()
                 next = i - 1
                 for g in tt:
-                    (h, j) = self.strip(base, reprs, i + 1, g)
-                    if not h.isID:
+                    (h, j) = self.strip(b, xs, gxs, i + 1, g)
+                    if not h.isID():
                         next = max(next, j)
-                        for k in range(i + 1, j + 1):
-                            groups[k] = groups[k] + h + h.inv
-                            newgens[k] = newgens[k].update({h, h.inv})
                         if j == len(base):
                             y = h.movedpt()
-                            base.append(y)
-                            groups.append(PermGroup({h, h.inv}))
-                            newgens.append({h, h.inv})
-            return getlevels(base, groups, newgens, reprs, next)
+                            b.append(y)
+                            gg.append(PermGroup([]))
+                            newgens.append([])
+                            xs.append([])
+                            gxs.append([])
+                        for k in range(i + 1, j + 1):
+                            gg[k] = gg[k] + h + h.inv()
+                            newgens[k] = newgens[k] + [h, h.inv()]
+            return getlevels(b, gg, newgens, xs, gxs, next)
 
+        base, groups = partialbsgs(base, perms)
 
-        groups = partialbsgs(base, perms)
         newgens = []
-        reprs = {}
+        xs = []
+        gxs = []
         for i in range(len(groups)):
-            newgens[i] = set()
-            reprs[i] = {}
+            xs.append(None)
+            gxs.append(None)
+            newgens.append(copy(groups[i].gens))
 
-        return getlevels(base, groups, newgens, reprs, len(groups) - 1)
+        return getlevels(base, groups, newgens, xs, gxs, len(groups) - 1)
 
     def atkinson(self, a, b):
         if a < b: bs = {b:a}; explore = [b]
@@ -175,7 +190,7 @@ class PermGroup(CAT):
         for g in self.gens:
             gens0.add(g.prod(other.identity))
         for g in other.gens:
-            gens1.add(self.identity.prod(g))
+            gens1.add(self.identity().prod(g))
         return PermGroup(gens0.union(gens1))
 
     def prodinv(self):
@@ -202,7 +217,7 @@ class PermGroup(CAT):
         for g in self.gens:
             gens0.add(g.gridFromseq(other.identity))
         for g in other.gens:
-            gens1.add(self.identity.gridFromseq(g))
+            gens1.add(self.identity().gridFromseq(g))
         return PermGroup(gens0.union(gens1))
 
     def gridFromseqinv(self):
@@ -211,19 +226,18 @@ class PermGroup(CAT):
             gens0.add(g.gridFromseqinv)
         return PermGroup(gens0)
 
-    def strip(self, base, reprs, start, g):
-        def go(h, l):
-            repr = reprs.get(start + l)
-            if repr is None:
-                return (h, start + l)
-            else:
-                u = repr.get(h.act[base[start + l]])
-                if u is None:
-                    return (h, start + l)
+    def strip(self, base, xs, gxs, start, g):
+        l = start
+        while True:
+            if l < len(base):
+                if g(base[l]) in xs[l]:
+                    g = g * gxs[l][xs[l].index(g(base[l]))].inv()
+                    l += 1
+                    continue
                 else:
-                    return go(h * u.inv, l + 1)
-        return go(g, 0)
-
+                    return (g, l)
+            else:
+                return (g, l)
 
 class BSGS:
 
@@ -232,11 +246,11 @@ class BSGS:
         self.groups = groups
         self.reprs = reprs
 
-    def __str__(self):
-        print("Base: {}, Groups: {}, Reprs: {}".format(self.base, self.groups, self.reprs))
+    def __repr__(self):
+        return "Base: {}, Groups: {}, Reprs: {}".format(self.base, self.groups, self.reprs)
 
     def contains(self, g):
-        return PermGroup.strip(self.base, self.reprs, 0, g)
+        return PermGroup.strip(PermGroup([]), self.base, self.reprs[0], self.reprs[1], 0, g)
 
 
 

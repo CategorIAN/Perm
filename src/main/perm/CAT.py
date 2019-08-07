@@ -27,10 +27,10 @@ class CAT:
         pass
 
     def grid(self, other):
-        return self.seq.gridFromseq(other.seq)
+        return self.seq().gridFromseq(other.seq())
 
     def gridinv(self):
-        return self.gridFromseqinv.seqinv
+        return self.gridFromseqinv().seqinv()
 
     def griddiag(self):
         return self.grid(self)

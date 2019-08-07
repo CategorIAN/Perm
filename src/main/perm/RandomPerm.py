@@ -20,14 +20,17 @@ class RandomPerm:
     def perm(self, degree):
         f = random.randint(0, degree)
         g = Cycle([])
+        g.extend(degree)
         for i in range(f):
             g = g * self.cycle(degree)
         return g
 
     def permgroup(self, degree):
         f = random.randint(0, degree)
-        gens = set()
+        gens = []
+        if f == 0 and degree > 0:
+            f += 1
         for i in range(f):
-            gens.add(self.perm(degree))
+            gens.append(self.perm(degree))
         return PermGroup(gens)
 
