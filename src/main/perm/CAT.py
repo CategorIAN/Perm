@@ -1,18 +1,9 @@
 class CAT:
-    def sum(self, other):
-        pass
-
-    def sumdiag(self):
-        return self.sum(self)
-
     def prod(self, other):
         pass
 
     def prodinv(self):
         pass
-
-    def proddiag(self):
-        return self.prod(self)
 
     def seq(self):
         pass
@@ -23,17 +14,20 @@ class CAT:
     def gridFromseq(self, other):
         pass
 
-    def gridFromseqinv(self):
+    def gridFromseqinv_phi(self):
+        pass
+
+    def gridFromseqinv_psi(self):
         pass
 
     def grid(self, other):
         return self.seq().gridFromseq(other.seq())
 
-    def gridinv(self):
-        return self.gridFromseqinv().seqinv()
+    def gridinv_0(self):
+        return self.gridFromseqinv_phi().seqinv()
 
-    def griddiag(self):
-        return self.grid(self)
+    def gridinv_1(self):
+        return self.gridFromseqinv_psi().seqinv()
 
 
 

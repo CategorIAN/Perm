@@ -1,6 +1,7 @@
 from .CAT import CAT
 from .Grid import Grid
 from .Combinatorics import Combinatorics as C
+from copy import copy
 
 
 class Perm(CAT):
@@ -8,19 +9,23 @@ class Perm(CAT):
         self.act = act
         self.degree = len(act)
 
+
     def __repr__(self):
         if self.degree < 100:
-            return "Perm{}".format(self.act)
+            display = []
+            for x in sorted(self.act.keys()):
+                display.append(self(x))
+            return "Perm{}".format(display)
         else:
             return "Perm of Degree {}".format(self.degree)
 
-    def __call__(self, a):
-        return self.act[a]
+    def __call__(self, a): return self.act[a]
 
     def extend(self, deg):
         for i in range(self.degree, deg):
             self.act[i] = i
         self.degree = deg
+        return self
 
     def __mul__(self, other):
         d = max(self.degree, other.degree)
@@ -64,17 +69,19 @@ class Perm(CAT):
     def isID(self):
         return self.movedpt() is None
 
+    def strip(self, base, xs, gxs, l):
+        g = copy(self)
+        while True:
+            if l < len(base):
+                if g(base[l]) in xs[l]:
+                    g = g * gxs[l][xs[l].index(g(base[l]))].inv()
+                    l += 1
+                else:
+                    return (g, l)
+            else:
+                return (g, l)
+
     #=================================================
-
-
-    def sum(self, other):
-        sumact = {}
-        for i in self.act:
-            sumact[(i, None)] = (self(i), None)
-        for i in other.act:
-            sumact[(None, i)] = (None, other(i))
-
-        return Perm(sumact)
 
     def prod(self, other):
         prodact = {}
@@ -83,21 +90,30 @@ class Perm(CAT):
                 prodact[(i, j)] = (self(i), other(j))
         return Perm(prodact)
 
-    def prodinv(self):
+    def diag(self):
+        return self.prod(self)
+
+    def prodinv_0(self):
         prodinvact = {}
         for i in self.act:
             prodinvact[i[0]] = self(i)[0]
+        return Perm(prodinvact)
+
+    def prodinv_1(self):
+        prodinvact = {}
+        for i in self.act:
+            prodinvact[i[1]] = self(i)[1]
         return Perm(prodinvact)
 
     def seq(self):
         n = self.degree
         seqact = {}
         for i in range(C().nCks(n)):
-            x = tuple(C().subset(n, i))
-            y = []
+            x = C().tuple(n, i)
+            y = ()
             for j in x:
-                y.append(self(j))
-            seqact[x] = tuple(y)
+                y = y + (self(j),)
+            seqact[x] = tuple(sorted(y))
         return Perm(seqact)
 
     def seqinv(self):
@@ -105,10 +121,9 @@ class Perm(CAT):
         for i in self.act:
             if len(x) < len(i):
                 x = i
-        y = self(x)
         seqinvact = {}
         for i in range(len(x)):
-            seqinvact[x[i]] = y[i]
+            seqinvact[x[i]] = self((x[i],))[0]
         return Perm(seqinvact)
 
     def gridFromseq(self, other):
@@ -118,11 +133,22 @@ class Perm(CAT):
                 gridact[Grid(i, k)] = Grid(j, l)
         return Perm(gridact)
 
+    def gridFromseqdiag(self):
+        return self.gridFromseq(self)
 
-    def gridFromseqinv(self):
+    def griddiag(self):
+        return self.grid(self)
+
+    def gridFromseqinv_phi(self):
         seqact = {}
         for i, j in self.act.items():
            seqact[i.phi] = j.phi
+        return Perm(seqact)
+
+    def gridFromseqinv_psi(self):
+        seqact = {}
+        for i, j in self.act.items():
+            seqact[i.psi] = j.psi
         return Perm(seqact)
 
 

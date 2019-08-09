@@ -1,5 +1,6 @@
 from .CAT import CAT
 from copy import copy
+from .Perm import Perm
 
 class PermGroup(CAT):
     def __init__(self, gens):
@@ -14,7 +15,9 @@ class PermGroup(CAT):
         return "PermGroup:{}".format(self.gens)
 
     def identity(self):
-        return self.gens[0].id()
+        if len(self.gens) > 0:
+            return self.gens[0].id()
+        else: return Perm({})
 
     def union(self, other):
         PermGroup(self.gens + other.gens)
@@ -66,10 +69,13 @@ class PermGroup(CAT):
                 if r not in x and r not in y:
                     y.append(r)
                     gy.append(gx[x.index(s)] * g)
-                elif r in x:
-                    M.append(gx[x.index(s)] * g * gx[x.index(r)].inv())
                 else:
-                    M.append(gx[x.index(s)] * g * gy[y.index(r)].inv())
+                    if r in x:
+                        h = gx[x.index(s)] * g * gx[x.index(r)].inv()
+                    else:
+                        h = gx[x.index(s)] * g * gy[y.index(r)].inv()
+                    if h not in M:
+                        M.append(h)
 
         for s in y:
             for g in self.gens:
@@ -77,10 +83,13 @@ class PermGroup(CAT):
                 if r not in x and r not in y:
                     y.append(r)
                     gy.append(gy[y.index(s)] * g)
-                elif r in x:
-                    M.append(gy[y.index(s)] * g * gx[x.index(r)].inv())
                 else:
-                    M.append(gy[y.index(s)] * g * gy[y.index(r)].inv())
+                    if r in x:
+                        h = gy[y.index(s)] * g * gx[x.index(r)].inv()
+                    else:
+                        h = gy[y.index(s)] * g * gy[y.index(r)].inv()
+                    if h not in M:
+                        M.append(h)
 
         return (x + y, gx + gy, M)
 
@@ -126,7 +135,7 @@ class PermGroup(CAT):
                 newgens[i].clear()
                 next = i - 1
                 for g in tt:
-                    (h, j) = self.strip(b, xs, gxs, i + 1, g)
+                    (h, j) = g.strip(b, xs, gxs, i + 1)
                     if not h.isID():
                         next = max(next, j)
                         if j == len(base):
@@ -154,90 +163,123 @@ class PermGroup(CAT):
         return getlevels(base, groups, newgens, xs, gxs, len(groups) - 1)
 
     def atkinson(self, a, b):
-        if a < b: bs = {b:a}; explore = [b]
-        else: bs = {a:b}; explore = [a]
-
+        bs = {}
+        for i in range(self.degree):
+            bs[i] = i
+        if a < b: bs[b] = a; explore = [b]
+        elif b < a: bs[a] = b; explore = [a]
+        else: explore = []
         for i in explore:
             for g in self.gens:
-                if bs[g.act[i]] != bs[g.act[bs[i]]]:
-                    c = min(bs[g.act[i]], bs[g.act[bs[i]]])
+                if bs[g(i)] != bs[g(bs[i])]:
+                    c = min(bs[g(i)], bs[g(bs[i])])
                     d = max(bs[g.act[i]], bs[g.act[bs[i]]])
-                    bs[d] = c
+                    bs[g(i)] = c
+                    bs[g(bs[i])] = c
                     explore.append(d)
-        for i, j in bs.items:
-            while j != bs[j]:
-                j = bs[j]
-                bs[i] = j
+        for i, j in bs.items():
+            k = bs[j]
+            ll = []
+            while k != j:
+                ll.append(i)
+                i = j
+                j = k
+                k = bs[j]
+            for l in ll:
+                bs[l] = k
+        return bs
 
     def isprimitive(self):
-        for i in self.gens[0].act:
-            if len(self.atkinson(0, i).values()) > 1:
+        for i in range(1, self.degree):
+            if len(set(self.atkinson(0, i).values())) > 1:
                 return False
         return True
 
-    def sum(self, other):
-        gens0 = set()
-        gens1 = set()
-        for g in self.gens:
-            gens0.add(g.sum(other.identity))
-        for g in other.gens:
-            gens1.add(g.sum(self.identity))
-        return PermGroup(gens0.union(gens1))
-
     def prod(self, other):
-        gens0 = set()
-        gens1 = set()
+        gens0 = []
+        gens1 = []
+        id0 = copy(self.identity())
+        id1 = copy(other.identity())
+        if len(id0.act) == 0:
+            id0 = Perm({0:0})
+        if len(id1.act) == 0:
+            id1 = Perm({0:0})
         for g in self.gens:
-            gens0.add(g.prod(other.identity))
+            gens0.append(g.prod(id1))
         for g in other.gens:
-            gens1.add(self.identity().prod(g))
-        return PermGroup(gens0.union(gens1))
+            gens1.append(id0.prod(g))
+        return PermGroup(gens0 + gens1)
 
-    def prodinv(self):
-        gens0 = set()
+    def diag(self):
+        gens = []
         for g in self.gens:
-            gens0.add(g.prodinv)
+            gens.append(g.diag())
+        return PermGroup(gens)
+
+    def prodinv_0(self):
+        gens0 = []
+        for g in self.gens:
+            gens0.append(g.prodinv_0())
         return PermGroup(gens0)
 
-    def seq(self):
-        gens0 = set()
+    def prodinv_1(self):
+        gens1 = []
         for g in self.gens:
-            gens0.add(g.seq)
+            gens1.append(g.prodinv_1())
+        return PermGroup(gens1)
+
+    def seq(self):
+        gens0 = []
+        for g in self.gens:
+            gens0.append(g.seq())
         return PermGroup(gens0)
 
     def seqinv(self):
-        gens0 = set()
+        gens0 = []
         for g in self.gens:
-            gens0.add(g.seqinv)
+            gens0.append(g.seqinv())
         return PermGroup(gens0)
 
     def gridFromseq(self, other):
-        gens0 = set()
-        gens1 = set()
+        gens0 = []
+        gens1 = []
+        id0 = copy(self.identity())
+        id1 = copy(other.identity())
+        if len(id0.act) == 0:
+            id0 = Perm({():()})
+        if len(id1.act) == 0:
+            id1 = Perm({():()})
         for g in self.gens:
-            gens0.add(g.gridFromseq(other.identity))
+            gens0.append(g.gridFromseq(id1))
         for g in other.gens:
-            gens1.add(self.identity().gridFromseq(g))
-        return PermGroup(gens0.union(gens1))
+            gens1.append(id0.gridFromseq(g))
+        return PermGroup(gens0 + gens1)
 
-    def gridFromseqinv(self):
-        gens0 = set()
+    def gridFromseqdiag(self):
+        gens = []
         for g in self.gens:
-            gens0.add(g.gridFromseqinv)
+            gens.append(g.gridFromseqdiag())
+        return PermGroup(gens)
+
+    def griddiag(self):
+        gens = []
+        for g in self.gens:
+            gens.append(g.griddiag())
+        return PermGroup(gens)
+
+    def gridFromseqinv_phi(self):
+        gens0 = []
+        for g in self.gens:
+            gens0.append(g.gridFromseqinv_phi())
         return PermGroup(gens0)
 
-    def strip(self, base, xs, gxs, start, g):
-        l = start
-        while True:
-            if l < len(base):
-                if g(base[l]) in xs[l]:
-                    g = g * gxs[l][xs[l].index(g(base[l]))].inv()
-                    l += 1
-                    continue
-                else:
-                    return (g, l)
-            else:
-                return (g, l)
+    def gridFromseqinv_psi(self):
+        gens1 = []
+        for g in self.gens:
+            gens1.append(g.gridFromseqinv_psi())
+        return PermGroup(gens1)
+
+
 
 class BSGS:
 
@@ -250,7 +292,7 @@ class BSGS:
         return "Base: {}, Groups: {}, Reprs: {}".format(self.base, self.groups, self.reprs)
 
     def contains(self, g):
-        return PermGroup.strip(PermGroup([]), self.base, self.reprs[0], self.reprs[1], 0, g)
+        return g.strip(self.base, self.reprs[0], self.reprs[1], 0)
 
 
 

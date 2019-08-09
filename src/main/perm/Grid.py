@@ -3,8 +3,21 @@ class Grid:
         self.phi = phi
         self.psi = psi
 
+    def __eq__(self, other):
+        return self.phi == other.phi and self.psi == other.psi
+
     def __repr__(self):
         return "Grid:({}, {})".format(self.phi, self.psi)
+
+    def __hash__(self):
+        return hash((self.phi, self.psi))
+
+    def __lt__(self, other):
+        if self.phi != other.phi:
+            return self.phi < other.phi
+        else:
+            return self.psi < other.psi
+
 
     def points(self, Pi):
         S = set()

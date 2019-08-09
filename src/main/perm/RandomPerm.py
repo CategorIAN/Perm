@@ -1,7 +1,9 @@
 import random
 from src.main.perm.Cycle import Cycle
 from src.main.perm.PermGroup import PermGroup
-
+from src.main.perm.PermCoset import PermCoset
+from src.main.perm.Grid import Grid
+from src.main.perm.PermCoset import Code
 
 class RandomPerm:
     def __init__(self):
@@ -33,4 +35,18 @@ class RandomPerm:
         for i in range(f):
             gens.append(self.perm(degree))
         return PermGroup(gens)
+
+    def permcoset(self, degree):
+        return PermCoset(self.permgroup(degree), self.perm(degree))
+
+    def code(self, a, b):
+        c = random.randint(0, a * b)
+        aa = tuple(range(a))
+        bb = tuple(range(b))
+        phi = set()
+        for i in range(c):
+            phi.add((random.choice(aa), random.choice(bb)))
+        codegrid = Grid(aa, bb)
+        return Code(phi, codegrid)
+
 
