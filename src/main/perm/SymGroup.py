@@ -3,7 +3,23 @@ from .Perm import Perm
 
 
 class SymGroup(PermGroup):
+    """
+    Class used to create the symmetric group on a set of integers of a given degree
+
+    ...
+
+    Attributes
+    -------
+    n: int
+        the degree of the symmetric group
+
+    """
     def __init__(self, n):
+        """
+
+        :param n: the degree of the group
+        :type n: int
+        """
         g0act = {}
         for i in range(n):
             g0act[i] = (i + 1) % n

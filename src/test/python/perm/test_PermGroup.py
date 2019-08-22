@@ -41,7 +41,6 @@ def orbitstab(ii = 10, d = 10):
 
 def schsims(ii = 10, d = 10):
     for i in range(ii):
-        a = randrange(1, d)
         r = Cycle([0,1,2,3,4,5])
         s = Cycle([0, 5]) * Cycle([1, 4]) * Cycle([2, 3])
         gg = PermGroup([r, s])
@@ -153,5 +152,5 @@ def grid(ii = 10, d = 10):
         print(gg.grid(hh))
 
 if __name__ == "__main__":
-    grid(10, 5)
+    schsims(1, 1)
 

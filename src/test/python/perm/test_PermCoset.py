@@ -10,7 +10,7 @@ def codestabilizer(ii = 10, d = 10):
         grid = Grid((0, 1), (0, 1, 2, 3))
         pi = {(0, 0), (0, 2), (1, 1), (1, 3)}
         code = Code(pi, grid)
-        gridgroup = SymGroup(list(range(2))).grid(SymGroup(list(range(4))))
+        gridgroup = SymGroup(2).grid(SymGroup(4))
         gridid = Cycle([1]).grid(Cycle([3]))
         gridcoset = PermCoset(gridgroup, gridid)
         print(code)
@@ -30,7 +30,7 @@ def intersection(ii = 10, a = 5, b = 5):
 
 
 if __name__ == "__main__":
-    intersection(1, 6, 6)
+    codestabilizer(1, 1)
 
 
 

@@ -8,7 +8,42 @@ from copy import copy
 
 
 class Graph(Code):
+    """
+    A class used to represent a graph of integers by its adjacency matrix
+
+    ...
+
+    Attributes
+    -------
+    n: int
+        the number of vertices of the graph
+
+    vertices: set
+        a set of integers representing the vertices of the graph
+
+    edges: set
+        a set of size 2 tuples of integers that represent directed edges
+
+    Methods
+    -------
+    id(degree)
+        Returns the identity permutation of a given degree
+
+    flip
+        Returns a vertex permutation that permutes two graphs of size n
+
+    iso(other)
+        Returns the edge preserving permutation coset that permutes this and another graph
+
+    """
     def __init__(self, n, edges):
+        """
+
+        :param n: the number of vertices of the graph
+        :type n: int
+        :param edges: the set of directed edges
+        :type edges: set
+        """
         self.n = n
         self.vertices = set(range(n))
         self.edges = edges
@@ -22,12 +57,24 @@ class Graph(Code):
         return "Vertices: {}, Edges: {}".format(self.vertices, self.edges)
 
     def id(self, degree):
+        """ Returns the identity permutation of a given degree
+
+        :param degree: size of the domain of permutation
+        :type degree: int
+        :return: identity permutation
+        :rtype: Perm
+        """
         idact = {}
         for i in range(degree):
             idact[i] = i
         return Perm(idact)
 
     def flip(self):
+        """ Returns a vertex permutation that permutes two graphs of size n
+
+        :return: permutation of integers
+        :rtype: Perm
+        """
         flipact = {}
         for i in self.codegrid.phi:
             flipact[i] = i + self.n
@@ -35,6 +82,13 @@ class Graph(Code):
         return Perm(flipact)
 
     def iso(self, other):
+        """ Returns the edge preserving permutation coset that permutes this and another graph
+
+        :param other: another graph
+        :type other: Graph
+        :return: the graph isomorphism coset
+        :rtype: PermCoset
+        """
         if self.n != other.n:
             return PermCoset(PermGroup([]), self.id(self.n + other.n))
         else:

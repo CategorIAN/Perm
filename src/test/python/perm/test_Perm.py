@@ -51,20 +51,6 @@ def movedpt(ii = 10, d = 10):
         print(g)
         print(g.movedpt())
 
-def sum(ii = 10, d = 10):
-    for i in range(ii):
-        g = R().perm(randrange(0, d))
-        h = R().perm(randrange(0, d))
-        print("---")
-        print(g)
-        g2 = g * g
-        h2 = h * h
-        print(h)
-        print(g.sum(h))
-        print(g.sum(h) * g.sum(h))
-        print(g2.sum(h2))
-        assert(g.sum(h) * g.sum(h) == g2.sum(h2))
-
 def prod(ii = 10, d = 10):
     for i in range(ii):
         g = R().perm(randrange(0, d))
@@ -142,7 +128,7 @@ def grid(ii = 10, d = 10):
         g = R().perm(randrange(0, d))
         h = R().perm(randrange(0, d))
         m = g.grid(h)
-        n = m.gridinv()
+        n = m.gridinv_0()
         print("----")
         print(g)
         print(h)

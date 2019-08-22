@@ -5,19 +5,52 @@ from copy import copy
 
 
 class Code:
+    """
+    A class representing a colored code
+
+    ...
+
+    Attributes
+    -------
+    pi: set
+        a set of tuples of integers that determine what values of the code grid are colored
+
+    codegrid: Grid
+        a grid of integers for the code colorings
+
+    Methods
+    -------
+    def trans(coset, grid)
+        Returns permutation subcoset that maps the given subgrid's colors to colors of the code grid
+
+    def stabilizer(coset)
+        Returns permutation subcoset that preserves the code grid's colors
+
+    """
     def __init__(self, pi, codegrid):
+        """
+
+        :param pi: the colored points of the code grid
+        :type pi: set
+        :param codegrid: the grid for the code
+        :type codegrid: Grid
+        """
         self.pi = pi
         self.codegrid = codegrid
 
     def __repr__(self):
         return "Code: {} / {}".format(self.pi, self.codegrid)
 
-    def trans(self, coset, grid, stop):
-        #if stop == 2: return coset
-        #print("==========================================================")
-        #print("Coset is {}".format(coset.gridinv_0()))
-        #print("Other Coset is {}".format(coset.gridinv_1()))
-        #print("Grid is {}".format(grid))
+    def trans(self, coset, grid):
+        """ Returns permutation subcoset that maps the given subgrid's colors to colors of the code grid
+
+        :param coset: coset that can act on the code
+        :type coset: PermCoset
+        :param grid: subgrid of the code grid
+        :type grid: Grid
+        :return: subcoset that maps the given subgrid's colors to colors of the code grid
+        :rtype: PermCoset
+        """
         def union(cc):
             L = None
             z = None
@@ -64,20 +97,92 @@ class Code:
                 cosets = []
                 for g in gx:
                     #print("~~~~~~~~~~~~~~~~")
-                    c1 = self.trans(PermCoset(PermGroup(tt), g * coset.z), grid0, stop + 1)
+                    c1 = self.trans(PermCoset(PermGroup(tt), g * coset.z), grid0)
                     #print("---------------")
-                    c2 = self.trans(c1, grid1, stop + 1)
+                    c2 = self.trans(c1, grid1)
                     #print("add to union")
                     cosets.append(c2)
                 return union(cosets)
 
     def stabilizer(self, coset):
-        return self.trans(coset, self.codegrid, 0)
+        """ Returns permutation subcoset that preserves the code grid's colors
+
+        :param coset: coset that can act on the code
+        :type coset: PermCoset
+        :return: the stabilizer coset
+        :rtype: PermCoset
+        """
+        return self.trans(coset, self.codegrid)
 
 
 
 class PermCoset(CAT):
+    """
+    A class representing a permutation coset
+
+    ...
+
+    Attributes
+    -------
+    L: PermGroup
+        the permutation group of the coset
+
+    z: Perm
+        the coset representative
+
+    degree: int
+        the size of the domain of the permutations
+
+    Methods
+    -------
+    intersection(other)
+        Returns the intersection of this coset and another coset
+
+    isEmpty
+        Determines whether this coset's group has no generators
+
+    prod(other)
+        Returns a coset that acts on tuples of values according to this and another coset
+
+    diag
+        Returns the diagonal product of this coset
+
+    prodinv_0
+        Returns the first projection of this coset that acts on tuples
+
+    prodinv_1
+        Returns the second projection of this coset that acts on tuples
+
+    seq
+        Returns coset that acts on sequences of points according to how this coset acts on points
+
+    seqinv
+        Returns coset that acts on points according to how this coset acts on sequences of points
+
+    gridFromseq(other)
+        Returns coset that acts on grids according to how this coset and another coset acts on sequences
+
+    gridFromseqdiag
+        Returns the diagonal grid product from this sequence-acting coset
+
+    griddiag
+        Returns the diagonal grid product from this point-acting coset
+
+    gridFromseq_phi
+        Returns the coset that acts on row sequences from this coset that acts on grids
+
+    gridFromseq_psi
+        Returns the coset that acts on column sequences from this coset that acts on grids
+
+    """
     def __init__(self, L, z):
+        """
+
+        :param L: the permutation group of the coset
+        :type L: PermGroup
+        :param z: the coset representative
+        :type z: Perm
+        """
         self.L = L
         self.z = z
         self.degree = max(self.L.degree, self.z.degree)
@@ -87,6 +192,13 @@ class PermCoset(CAT):
         else: return 'PermCoset: {} with rep {}'.format(self.L, self.z)
 
     def intersection(self, other):
+        """ Returns the intersection of this coset and another coset
+
+        :param other: another coset
+        :type other: PermCoset
+        :return: intersection of the cosets
+        :rtype: PermCoset
+        """
         pi = set()
         phi = tuple(range(self.degree))
         psi = tuple(range(other.degree))
@@ -105,36 +217,102 @@ class PermCoset(CAT):
         return Code(pi, Grid(phi, psi)).stabilizer(coset).gridinv_0()
 
     def isEmpty(self):
+        """ Determines whether this coset's group has no generators
+
+        :return: True iff its group has no generators
+        :rtype: bool
+        """
         return len(self.L.gens) == 0
 
     def prod(self, other):
+        """ Returns a coset that acts on tuples of values according to this and another coset
+
+        :param other: another coset
+        :type other: PermCoset
+        :return: direct product of cosets
+        :rtype: PermCoset
+        """
         return PermCoset(self.L.prod(other.L), self.z.prod(other))
 
-    def diag(self, other):
+    def diag(self):
+        """ Returns the diagonal product of this coset
+
+        :return: diagonal product coset
+        :rtype: PermCoset
+        """
         return PermCoset(self.L.diag(), self.z.diag())
 
-    def prodinv(self):
-        return PermCoset(self.L.prodinv(), self.z.prodinv())
+    def prodinv_0(self):
+        """ Returns the first projection of this coset that acts on tuples
+
+        :return: coset acting on the first coordinates
+        :rtype: PermCoset
+        """
+        return PermCoset(self.L.prodinv_0(), self.z.prodinv_0())
+
+    def prodinv_1(self):
+        """ Returns the second projection of this coset that acts on tuples
+
+        :return: coset acting on the second coordinates
+        :rtype: PermCoset
+        """
+        return PermCoset(self.L.prodinv_0(), self.z.prodinv_0())
 
     def seq(self):
+        """ Returns coset that acts on sequences of points according to how this coset acts on points
+
+        :return: coset of permutations of sequences
+        :rtype: PermCoset
+        """
         return PermCoset(self.L.seq(), self.z.seq())
 
     def seqinv(self):
+        """ Returns coset that acts on points according to how this coset acts on sequences of points
+
+        :return: coset of permutations of points
+        :rtype: PermCoset
+        """
         return PermCoset(self.L.seqinv(), self.z.seqinv())
 
     def gridFromseq(self, other):
+        """ Returns coset that acts on grids according to how this coset and another coset act on sequences
+
+        :param other: another coset of permutations of sequences
+        :return: product of cosets that acts on grids
+        :rtype: PermCoset
+        """
         return PermCoset(self.L.gridFromseq(other.L), self.z.gridFromseq(other.z))
 
     def gridFromseqdiag(self):
+        """ Returns the diagonal grid product from this sequence-acting coset
+
+        :return: diagonal product of this coset that acts on grids
+        :rtype: PermCoset
+        """
         return PermCoset(self.L.gridFromseqdiag(), self.z.gridFromseqdiag())
 
     def griddiag(self):
+        """ Returns the diagonal grid product from this point-acting coset
+
+        :return: diagonal product of this coset that acts on grids
+        :rtype: PermCoset
+        """
         return PermCoset(self.L.griddiag(), self.z.griddiag())
 
     def gridFromseqinv_phi(self):
+        """ Returns the coset that acts on row sequences from this coset that acts on grids
+
+        :return: coset of permutations of row sequences
+        :rtype: PermCoset
+        """
         return PermCoset(self.L.gridFromseqinv_phi(), self.z.gridFromseqinv_phi())
 
     def gridFromseqinv_psi(self):
+        """ Returns the coset that acts on column sequences from this coset that acts on grids
+
+        :return: coset of permutations of column sequences
+        :rtype: PermCoset
+        """
         return PermCoset(self.L.gridFromseqinv_psi(), self.z.gridFromseqinv_psi())
 
 
